@@ -1,0 +1,67 @@
+criarArquivo()
+    associeArquivo(arquivoDados, "nome_arquivo.dat")
+    crieArquivo(arquivoDados) { cria arquivo vazio }
+
+    leia(númeroInicialRegistros)
+
+    para i <- 1 até númeroInicialRegistros faça
+        obtenhaRegistro(registro) { digitação dos dados por exemplo }
+        escrevaArquivo(arquivoDados, registro) { escreve novo registro }
+    fim-para
+
+    fecheArquivo(arquivoDados) { encerra o acesso }
+
+
+
+insira(arquivoDados, novoRegistro)
+    { posicionamento no fim do arquivo }
+    posicioneArquivo(arquivoDados, tamanhoArquivo(arquivoDados))
+
+    { gravação do novo item }
+    escrevaArquivo(arquivoDados, novoRegistro)
+
+
+
+remova(arquivoDados, posição)
+    { obtenção do último registro }
+    posicioneArquivo(arquivoDados, tamanhoArquivo(arquivoDados) – 1)
+
+    leiaArquivo(arquivoDados, últimoRegistro)
+
+    { gravação do registro sobre a posição
+      do registro a ser descartado }
+
+    posicioneArquivo(arquivoDados, posição)
+    escrevaArquivo(arquivoDados, últimoRegistro)
+
+    { truncamento do arquivo }
+    posicioneArquivo(arquivoDados, tamanhoArquivo(arquivoDados))
+    trunqueArquivo(arquivoDados)
+
+
+
+pesquisa(arquivoDados, chave)
+    { ajusta busca para o início do arquivo }
+    posiçãoAnterior <- posiçãoArquivo(arquivoDados) { preserva posição atual }
+
+    posicioneArquivo(arquivoDados, 0)
+
+    achou <- falso
+    posição <- -1 { contagem atrasada }
+
+    enquanto não achou e não fimArquivo(arquivoDados) faça
+        leiaArquivo(arquivoDados, registro)
+        achou <- registro.chave = chave
+        posição <- posição + 1
+    fim-enquanto
+
+    { restaura posição anterior do ponteiro do arquivo }
+    posicioneArquivo(arquivoDados, posiçãoAnterior)
+
+    { retorna resultado da pesquisa }
+
+    se achou então
+        retorne posição
+    senão
+        retorne -1 { indicação de falha }
+    fim-se
