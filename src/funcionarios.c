@@ -31,6 +31,20 @@ int TAMANHO_VETOR_BLOCO;
 int TAMANHO_LASTRO;
 int TAMANHO_BLOCO_DISCO;
 
+void listar_blocos(int quantos_blocos, struct bloco_funcionarios *b) {
+    int i = 0;
+    for (i = 0; i < quantos_blocos; i++) {
+        printf("Bloco %d tem %d registros.\n", i, b[i].contador);
+        int j;
+        for (j = 0; j < b[i].contador; j++) {
+            int k = 0;
+            for (k = 0; k < 6; k++)
+                printf("%c", b[i].vetor[j].codigo[k]);
+            printf("\n");
+        }
+    }
+}
+
 void novo_bloco(struct bloco_funcionarios *b, int c, struct funcionario *f, int *posicao) {
     b->contador = c;
     b->vetor    = (struct funcionario *)malloc(TAMANHO_VETOR_BLOCO);
@@ -72,19 +86,18 @@ int remover(int arquivo, int *quantos_blocos, struct bloco_funcionarios **b, con
         return 0;
     }
 
-    struct bloco_funcionarios ultimo_bloco = (*b)[*quantos_blocos - 1];
-    struct funcionario ultimo_registro     = ultimo_bloco.vetor[ultimo_bloco.contador];
+    (*b)[bloco].vetor[registro] = (*b)[*quantos_blocos - 1].vetor[(*b)[*quantos_blocos - 1].contador-1];
 
-    (*b)[bloco].vetor[registro] = ultimo_registro;
-
-
-    ultimo_bloco.contador = ultimo_bloco.contador-1;
+    (*b)[*quantos_blocos - 1].contador = (*b)[*quantos_blocos - 1].contador-1;
 
     lseek(arquivo, TAMANHO_BLOCO_DISCO*bloco, SEEK_SET);
     int retorno1 = escrever_bloco_em_arquivo(arquivo, (*b)[bloco]);
 
     lseek(arquivo, TAMANHO_BLOCO_DISCO*(*quantos_blocos-1), SEEK_SET);
-    int retorno2 = escrever_bloco_em_arquivo(arquivo, ultimo_bloco);
+    int retorno2 = escrever_bloco_em_arquivo(arquivo, (*b)[*quantos_blocos - 1]);
+
+    int pos = lseek(arquivo, 0, SEEK_CUR);
+    ftruncate(arquivo, pos);
 
     return retorno1 && retorno2;
 }
@@ -244,6 +257,8 @@ int main(int argc, char *argv[]) {
     if (remover(arquivo, &quantos_blocos, &blocos, "abc95")) {
         printf("Removeu\n");
     }
+
+    listar_blocos(quantos_blocos, blocos);
 
     close(arquivo);
 }
