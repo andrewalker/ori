@@ -43,8 +43,50 @@ void novo_bloco(struct bloco_funcionarios *b, int c, struct funcionario *f, int 
     }
 }
 
-void remover(int arquivo, const char *codigo) {
-    lseek(arquivo, 0, SEEK_SET);
+int encontrar_registro(int quantos_blocos, struct bloco_funcionarios *b, const char *codigo, int *bloco, int *registro) {
+    int i;
+    for (i = 0; i < quantos_blocos; i++) {
+        int j;
+        for (j = 0; j < b[i].contador; j++) {
+            char igual = 1;
+            int k;
+            for (k = 0; igual && k < 6; k++) {
+                if (b[i].vetor[j].codigo[k] != codigo[k])
+                    igual = 0;
+            }
+            if (igual) {
+                *bloco = i;
+                *registro = j;
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+int remover(int arquivo, int *quantos_blocos, struct bloco_funcionarios **b, const char *codigo) {
+    int bloco, registro;
+
+    if (!encontrar_registro(*quantos_blocos, *b, codigo, &bloco, &registro)) {
+        printf("registro não encontrado\n");
+        return 0;
+    }
+
+    struct bloco_funcionarios ultimo_bloco = (*b)[*quantos_blocos - 1];
+    struct funcionario ultimo_registro     = ultimo_bloco.vetor[ultimo_bloco.contador];
+
+    (*b)[bloco].vetor[registro] = ultimo_registro;
+
+
+    ultimo_bloco.contador = ultimo_bloco.contador-1;
+
+    lseek(arquivo, TAMANHO_BLOCO_DISCO*bloco, SEEK_SET);
+    int retorno1 = escrever_bloco_em_arquivo(arquivo, (*b)[bloco]);
+
+    lseek(arquivo, TAMANHO_BLOCO_DISCO*(*quantos_blocos-1), SEEK_SET);
+    int retorno2 = escrever_bloco_em_arquivo(arquivo, ultimo_bloco);
+
+    return retorno1 && retorno2;
 }
 
 int inserir(int arquivo, int *quantos_blocos, struct bloco_funcionarios **b, struct funcionario f) {
@@ -164,8 +206,8 @@ int main(int argc, char *argv[]) {
     int i;
     char data[9] = "20130117";
     for (i = 0; i < quantos_registros; i++) {
-        sprintf(f[i].codigo, "abc%2d", i);
-        sprintf(f[i].nome, "Funcionário %2d", i);
+        sprintf(f[i].codigo, "abc%d", i);
+        sprintf(f[i].nome, "Funcionário %d", i);
         int j;
         for (j = 0; j < 9; j++) {
             f[i].data_admissao[j] = data[j];
@@ -186,15 +228,22 @@ int main(int argc, char *argv[]) {
 
     criar_arquivo(arquivo, quantos_blocos, blocos);
 
+    /*
     struct funcionario f2;
-    sprintf(f2.codigo, "abc%2d", 200);
-    sprintf(f2.nome, "Funcionário %2d", 200);
+    sprintf(f2.codigo, "abc%d", 200);
+    sprintf(f2.nome, "Funcionário %d", 200);
     for (i = 0; i < 9; i++) {
         f2.data_admissao[i] = data[i];
     }
     f2.salario = 2000.00;
 
     inserir(arquivo, &quantos_blocos, &blocos, f2);
+    inserir(arquivo, &quantos_blocos, &blocos, f2);
+    */
+
+    if (remover(arquivo, &quantos_blocos, &blocos, "abc95")) {
+        printf("Removeu\n");
+    }
 
     close(arquivo);
 }
