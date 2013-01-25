@@ -241,7 +241,6 @@ int main(int argc, char *argv[]) {
 
     criar_arquivo(arquivo, quantos_blocos, blocos);
 
-    /*
     struct funcionario f2;
     sprintf(f2.codigo, "abc%d", 200);
     sprintf(f2.nome, "Funcionário %d", 200);
@@ -252,7 +251,6 @@ int main(int argc, char *argv[]) {
 
     inserir(arquivo, &quantos_blocos, &blocos, f2);
     inserir(arquivo, &quantos_blocos, &blocos, f2);
-    */
 
     if (remover(arquivo, &quantos_blocos, &blocos, "abc95")) {
         printf("Removeu\n");
