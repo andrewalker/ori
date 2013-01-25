@@ -8,6 +8,7 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <malloc.h>
+#include <unistd.h>
 
 /* Registro utilizado para demonstrar o conceito */
 struct funcionario {
@@ -28,6 +29,18 @@ int TAMANHO_REGISTRO;
 int REGISTROS_POR_BLOCO;
 int TAMANHO_VETOR_BLOCO;
 int TAMANHO_LASTRO;
+
+void pesquisar(int arquivo, const char *codigo) {
+    lseek(arquivo, 0, SEEK_SET);
+}
+
+void remover(int arquivo, const char *codigo) {
+    lseek(arquivo, 0, SEEK_SET);
+}
+
+void inserir(int arquivo) {
+    lseek(arquivo, 0, SEEK_SET);
+}
 
 int criar_arquivo(int quantos_blocos, struct bloco_funcionarios *b) {
     int arquivo = open("data/arquivo.txt", O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
@@ -95,6 +108,32 @@ void novo_bloco(struct bloco_funcionarios *b, int c, struct funcionario *f, int 
     }
 }
 
+struct bloco_funcionarios * separar_em_blocos(int quantos_registros, struct funcionario *f, int *qtd_blocos) {
+    int quantos_blocos = (int) quantos_registros / REGISTROS_POR_BLOCO;
+    int registros_no_ultimo_bloco = quantos_registros % REGISTROS_POR_BLOCO;
+
+    if (registros_no_ultimo_bloco > 0) {
+        quantos_blocos++;
+    }
+    else {
+        registros_no_ultimo_bloco = REGISTROS_POR_BLOCO;
+    }
+
+    *qtd_blocos = quantos_blocos;
+
+    struct bloco_funcionarios *blocos;
+    blocos = (struct bloco_funcionarios *)malloc(quantos_blocos*sizeof(struct bloco_funcionarios));
+
+    int posicao = 0;
+    int i;
+    for (i = 0; i < quantos_blocos-1; i++) {
+        novo_bloco(&blocos[i], REGISTROS_POR_BLOCO, f, &posicao);
+    }
+    novo_bloco(&blocos[quantos_blocos-1], registros_no_ultimo_bloco, f, &posicao);
+
+    return blocos;
+}
+
 int main(int argc, char *argv[]) {
     inicializar_variaveis(argv[0]);
 
@@ -114,24 +153,9 @@ int main(int argc, char *argv[]) {
         f[i].salario = 2000.00;
     }
 
-    int quantos_blocos = (int) quantos_registros / REGISTROS_POR_BLOCO;
-    int registros_no_ultimo_bloco = quantos_registros % REGISTROS_POR_BLOCO;
-
-    if (registros_no_ultimo_bloco > 0) {
-        quantos_blocos++;
-    }
-    else {
-        registros_no_ultimo_bloco = REGISTROS_POR_BLOCO;
-    }
-
     struct bloco_funcionarios *blocos;
-    blocos = (struct bloco_funcionarios *)malloc(quantos_blocos*sizeof(struct bloco_funcionarios));
-
-    int posicao = 0;
-    for (i = 0; i < quantos_blocos-1; i++) {
-        novo_bloco(&blocos[i], REGISTROS_POR_BLOCO, f, &posicao);
-    }
-    novo_bloco(&blocos[quantos_blocos-1], registros_no_ultimo_bloco, f, &posicao);
+    int quantos_blocos;
+    blocos = separar_em_blocos(quantos_registros, f, &quantos_blocos);
 
     return criar_arquivo(quantos_blocos, blocos);
 }
